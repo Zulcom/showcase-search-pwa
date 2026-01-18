@@ -14,7 +14,7 @@
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
-    "prepare": "panda codegen",
+    "prepare": "panda codegen && panda cssgen --outfile styled-system/styles.css",
     "generate-types": "tsx scripts/generate-types.ts"
   },
   "dependencies": {
