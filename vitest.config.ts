@@ -12,7 +12,17 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],
-      exclude: ["node_modules/", "src/test/", "styled-system/", "*.config.*", "scripts/", "tests/"],
+      include: ["src/hooks/**", "src/lib/**", "src/api/**"],
+      exclude: [
+        "node_modules/",
+        "src/test/",
+        "styled-system/",
+        "*.config.*",
+        "scripts/",
+        "tests/",
+        "dist/",
+        "**/*.test.ts",
+      ],
     },
   },
   resolve: {
