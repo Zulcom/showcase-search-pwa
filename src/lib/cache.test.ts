@@ -51,4 +51,53 @@ describe("cache", () => {
     expect(getFromCache("key1")).toBeNull();
     expect(getFromCache("key2")).toBeNull();
   });
+
+  it("should handle getFromCache errors gracefully", () => {
+    localStorage.setItem("github-search:invalid", "not-json{{{");
+    const result = getFromCache("invalid");
+    expect(result).toBeNull();
+  });
+
+  it("should handle setInCache errors gracefully", () => {
+    const originalSetItem = localStorage.setItem;
+    localStorage.setItem = vi.fn(() => {
+      throw new Error("Storage full");
+    });
+
+    expect(() => setInCache("key", "value")).not.toThrow();
+
+    localStorage.setItem = originalSetItem;
+  });
+
+  it("should handle removeFromCache errors gracefully", () => {
+    const originalRemoveItem = localStorage.removeItem;
+    localStorage.removeItem = vi.fn(() => {
+      throw new Error("Storage error");
+    });
+
+    expect(() => removeFromCache("key")).not.toThrow();
+
+    localStorage.removeItem = originalRemoveItem;
+  });
+
+  it("should handle clearCache errors gracefully", () => {
+    const originalKey = localStorage.key;
+    localStorage.key = vi.fn(() => {
+      throw new Error("Storage error");
+    });
+
+    expect(() => clearCache()).not.toThrow();
+
+    localStorage.key = originalKey;
+  });
+
+  it("should not remove non-prefixed keys during clearCache", () => {
+    localStorage.setItem("other-key", "value");
+    setInCache("cached-key", "cached-value");
+
+    clearCache();
+
+    expect(localStorage.getItem("other-key")).toBe("value");
+    expect(getFromCache("cached-key")).toBeNull();
+  });
 });

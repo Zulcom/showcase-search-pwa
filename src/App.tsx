@@ -86,6 +86,14 @@ function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (hasSearched && query) {
+      document.title = `"${query}" - GitHub User Search`;
+    } else {
+      document.title = "GitHub User Search - Explore Users & Repositories";
+    }
+  }, [query, hasSearched]);
+
   const showCentered = !hasSearched && users.length === 0;
 
   return (

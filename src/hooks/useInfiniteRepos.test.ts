@@ -98,4 +98,150 @@ describe("useInfiniteRepos", () => {
 
     expect(githubApi.getUserRepos).not.toHaveBeenCalled();
   });
+
+  it("should load more repos", async () => {
+    const page1Repos = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      name: `repo${i}`,
+      full_name: `user/repo${i}`,
+      html_url: `https://github.com/user/repo${i}`,
+      description: `Test repo ${i}`,
+      stargazers_count: 10,
+      forks_count: 1,
+      language: "TypeScript",
+    }));
+
+    const page2Repos = Array.from({ length: 10 }, (_, i) => ({
+      id: 30 + i,
+      name: `repo${30 + i}`,
+      full_name: `user/repo${30 + i}`,
+      html_url: `https://github.com/user/repo${30 + i}`,
+      description: `Test repo ${30 + i}`,
+      stargazers_count: 5,
+      forks_count: 0,
+      language: "JavaScript",
+    }));
+
+    vi.mocked(githubApi.getUserRepos)
+      .mockResolvedValueOnce(page1Repos as never)
+      .mockResolvedValueOnce(page2Repos as never);
+
+    const { result } = renderHook(() => useInfiniteRepos());
+
+    await act(async () => {
+      await result.current.loadRepos("testuser");
+    });
+
+    await waitFor(() => {
+      expect(result.current.repos.length).toBe(30);
+      expect(result.current.hasMore).toBe(true);
+    });
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    await waitFor(() => {
+      expect(result.current.repos.length).toBe(40);
+      expect(result.current.hasMore).toBe(false);
+    });
+  });
+
+  it("should not load more if hasMore is false", async () => {
+    vi.mocked(githubApi.getUserRepos).mockResolvedValue(mockRepos as never);
+
+    const { result } = renderHook(() => useInfiniteRepos());
+
+    await act(async () => {
+      await result.current.loadRepos("testuser");
+    });
+
+    await waitFor(() => {
+      expect(result.current.hasMore).toBe(false);
+    });
+
+    vi.clearAllMocks();
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    expect(githubApi.getUserRepos).not.toHaveBeenCalled();
+  });
+
+  it("should handle loadMore error", async () => {
+    const page1Repos = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      name: `repo${i}`,
+      full_name: `user/repo${i}`,
+      html_url: `https://github.com/user/repo${i}`,
+      description: `Test repo ${i}`,
+      stargazers_count: 10,
+      forks_count: 1,
+      language: "TypeScript",
+    }));
+
+    vi.mocked(githubApi.getUserRepos)
+      .mockResolvedValueOnce(page1Repos as never)
+      .mockRejectedValueOnce(new Error("Load more failed"));
+
+    const { result } = renderHook(() => useInfiniteRepos());
+
+    await act(async () => {
+      await result.current.loadRepos("testuser");
+    });
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe("Load more failed");
+    });
+  });
+
+  it("should handle non-Error rejection in loadMore", async () => {
+    const page1Repos = Array.from({ length: 30 }, (_, i) => ({
+      id: i,
+      name: `repo${i}`,
+      full_name: `user/repo${i}`,
+      html_url: `https://github.com/user/repo${i}`,
+      description: `Test repo ${i}`,
+      stargazers_count: 10,
+      forks_count: 1,
+      language: "TypeScript",
+    }));
+
+    vi.mocked(githubApi.getUserRepos)
+      .mockResolvedValueOnce(page1Repos as never)
+      .mockRejectedValueOnce("String error");
+
+    const { result } = renderHook(() => useInfiniteRepos());
+
+    await act(async () => {
+      await result.current.loadRepos("testuser");
+    });
+
+    await act(async () => {
+      await result.current.loadMore();
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe("Failed to load more repositories");
+    });
+  });
+
+  it("should handle non-Error rejection in loadRepos", async () => {
+    vi.mocked(githubApi.getUserRepos).mockRejectedValue("String error");
+
+    const { result } = renderHook(() => useInfiniteRepos());
+
+    await act(async () => {
+      await result.current.loadRepos("testuser");
+    });
+
+    await waitFor(() => {
+      expect(result.current.error).toBe("Failed to load repositories");
+    });
+  });
 });
