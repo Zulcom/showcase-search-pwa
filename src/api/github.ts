@@ -1,0 +1,86 @@
+import { withRetry } from "../lib/retry";
+import { getFromCache, setInCache } from "../lib/cache";
+import { logger } from "../lib/logger";
+import type {
+  GitHubUserSearchResponse,
+  GitHubRepository,
+  GitHubError,
+} from "../types/github.generated";
+
+const BASE_URL = "https://api.github.com";
+const CACHE_TTL = 1000 * 60 * 5;
+
+async function fetchWithAuth<T>(endpoint: string): Promise<T> {
+  const response = await fetch(`${BASE_URL}${endpoint}`, {
+    headers: {
+      Accept: "application/vnd.github.v3+json",
+    },
+  });
+
+  if (!response.ok) {
+    const error: GitHubError = await response.json().catch(() => ({
+      message: `HTTP ${response.status}: ${response.statusText}`,
+    }));
+
+    if (response.status === 403 && error.message.includes("rate limit")) {
+      throw new Error("GitHub API rate limit exceeded. Please try again later.");
+    }
+
+    if (response.status === 404) {
+      throw new Error("Resource not found");
+    }
+
+    throw new Error(error.message || `Request failed with status ${response.status}`);
+  }
+
+  return response.json();
+}
+
+export async function searchUsers(
+  query: string,
+  perPage: number = 5
+): Promise<GitHubUserSearchResponse> {
+  const cacheKey = `users:${query}:${perPage}`;
+  const cached = getFromCache<GitHubUserSearchResponse>(cacheKey);
+
+  if (cached) {
+    logger.debug("Returning cached user search results", { query, perPage });
+    return cached;
+  }
+
+  logger.info("Searching GitHub users", { query, perPage });
+
+  const result = await withRetry(() =>
+    fetchWithAuth<GitHubUserSearchResponse>(
+      `/search/users?q=${encodeURIComponent(query)}&per_page=${perPage}`
+    )
+  );
+
+  setInCache(cacheKey, result, CACHE_TTL);
+  return result;
+}
+
+export async function getUserRepos(
+  username: string,
+  page: number = 1,
+  perPage: number = 30
+): Promise<GitHubRepository[]> {
+  const cacheKey = `repos:${username}:${page}:${perPage}`;
+  const cached = getFromCache<GitHubRepository[]>(cacheKey);
+
+  if (cached) {
+    logger.debug("Returning cached repositories", { username, page, perPage });
+    return cached;
+  }
+
+  logger.info("Fetching user repositories", { username, page, perPage });
+
+  const result = await withRetry(() =>
+    fetchWithAuth<GitHubRepository[]>(
+      `/users/${encodeURIComponent(username)}/repos?page=${page}&per_page=${perPage}&sort=updated`
+    )
+  );
+
+  setInCache(cacheKey, result, CACHE_TTL);
+  return result;
+}
