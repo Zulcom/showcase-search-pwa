@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures";
 
 test.describe("Offline functionality", () => {
   test("should detect offline state via navigator.onLine", async ({ page }) => {

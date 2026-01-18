@@ -26,6 +26,7 @@ lerna-debug.log*
 
 # Test
 coverage
+coverage-e2e
 playwright-report
 test-results
 
