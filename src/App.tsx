@@ -197,6 +197,15 @@ function App() {
 
           {!isLoading && users.length > 0 && (
             <ErrorBoundary>
+              <p
+                className={css({
+                  fontSize: "sm",
+                  color: "text.muted",
+                  mb: "2",
+                })}
+              >
+                Showing users for "{query}"
+              </p>
               <Suspense fallback={<Skeleton count={5} />}>
                 <UserAccordion
                   users={users}
