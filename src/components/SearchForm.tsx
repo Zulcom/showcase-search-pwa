@@ -4,6 +4,7 @@ import { css } from "../../styled-system/css";
 import { useClipboard } from "../hooks/useClipboard";
 import { useHotkeys } from "react-hotkeys-hook";
 import { CloseIcon, ClipboardPasteIcon, SearchIcon } from "./icons";
+import { config } from "../lib/config";
 
 interface SearchFormProps {
   query: string;
@@ -123,6 +124,7 @@ export function SearchForm({
             aria-describedby={error ? "search-error" : undefined}
             aria-invalid={!!error}
             minLength={3}
+            maxLength={config.search.maxUsernameLength}
             className={css({
               w: "full",
               px: "4",

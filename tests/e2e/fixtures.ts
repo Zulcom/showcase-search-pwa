@@ -1,8 +1,9 @@
 import { test as base, expect } from "@playwright/test";
 import * as fs from "fs";
 import * as path from "path";
+import v8toIstanbul from "v8-to-istanbul";
 
-const coverageDir = path.join(process.cwd(), "coverage-e2e");
+const coverageDir = path.join(process.cwd(), ".nyc_output");
 
 const mockUserSearchResponse = {
   total_count: 5,
@@ -195,15 +196,32 @@ export const test = base.extend({
         fs.mkdirSync(coverageDir, { recursive: true });
       }
 
-      const timestamp = Date.now();
-      const random = Math.random().toString(36).substring(7);
-      const filename = path.join(coverageDir, `coverage-${timestamp}-${random}.json`);
-
       const filteredCoverage = coverage.filter(
         (entry) => entry.url.includes("localhost:5173") && !entry.url.includes("node_modules")
       );
 
-      fs.writeFileSync(filename, JSON.stringify(filteredCoverage, null, 2));
+      const istanbulCoverage: Record<string, unknown> = {};
+
+      for (const entry of filteredCoverage) {
+        try {
+          // Extract file path from URL (e.g., http://localhost:5173/src/App.tsx -> src/App.tsx)
+          const url = new URL(entry.url);
+          const relativePath = url.pathname.slice(1); // Remove leading slash
+          const absolutePath = path.join(process.cwd(), relativePath);
+
+          const converter = v8toIstanbul(absolutePath, 0, { source: entry.source! });
+          await converter.load();
+          converter.applyCoverage(entry.functions);
+          Object.assign(istanbulCoverage, converter.toIstanbul());
+        } catch {
+          // Skip entries that fail to convert (e.g., inline scripts, eval)
+        }
+      }
+
+      const timestamp = Date.now();
+      const random = Math.random().toString(36).substring(7);
+      const filename = path.join(coverageDir, `coverage-${timestamp}-${random}.json`);
+      fs.writeFileSync(filename, JSON.stringify(istanbulCoverage, null, 2));
     }
   },
 });

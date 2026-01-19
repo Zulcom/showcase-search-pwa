@@ -38,6 +38,7 @@ export const config = {
   },
 
   search: {
+    maxUsernameLength: 39,
     defaultSuggestions: [
       "torvalds",
       "microsoft",

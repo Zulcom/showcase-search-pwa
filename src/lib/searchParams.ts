@@ -1,10 +1,15 @@
-const MAX_QUERY_LENGTH = 100;
+import { config } from "./config";
+
 const SEARCH_PARAM = "q";
 
+/**
+ * Usernames for user accounts on GitHub can only contain alphanumeric characters and dashes (-).
+ * @see https://docs.github.com/en/enterprise-cloud@latest/admin/managing-iam/iam-configuration-reference/username-considerations-for-external-authentication
+ */
 export function sanitizeQuery(input: string): string {
   return input
     .trim()
-    .slice(0, MAX_QUERY_LENGTH)
+    .slice(0, config.search.maxUsernameLength)
     .replace(/[^a-zA-Z0-9-]/g, "");
 }
 
