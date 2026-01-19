@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { Virtuoso } from "react-virtuoso";
 import { css } from "../../styled-system/css";
 import { RepoItem } from "./RepoItem";
 import { RepoSkeleton } from "./Skeleton";
@@ -20,21 +20,6 @@ export function RepoList({
   hasMore = false,
   onLoadMore,
 }: RepoListProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  const handleScroll = useCallback(() => {
-    if (!scrollRef.current || !hasMore || isLoadingMore || !onLoadMore) {
-      return;
-    }
-
-    const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
-    const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
-
-    if (distanceFromBottom < config.ui.loadMoreThreshold) {
-      onLoadMore();
-    }
-  }, [hasMore, isLoadingMore, onLoadMore]);
-
   if (isLoading) {
     return <RepoSkeleton count={5} />;
   }
@@ -53,63 +38,65 @@ export function RepoList({
     );
   }
 
-  const useScroll = repos.length >= config.ui.repoListScrollThreshold;
+  const useVirtualization = repos.length >= config.ui.repoListScrollThreshold;
+
+  if (!useVirtualization) {
+    return (
+      <div
+        className={css({
+          display: "flex",
+          flexDirection: "column",
+          gap: "2",
+          pl: "4",
+        })}
+        role="list"
+        aria-label="Repositories"
+      >
+        {repos.map((repo) => (
+          <div key={repo.id} role="listitem">
+            <RepoItem repo={repo} />
+          </div>
+        ))}
+      </div>
+    );
+  }
 
   return (
-    <div
-      ref={scrollRef}
-      onScroll={handleScroll}
-      className={css({
-        display: "flex",
-        flexDirection: "column",
-        gap: "2",
-        pl: "4",
-        ...(useScroll && {
-          maxHeight: `${config.ui.repoListMaxHeight}px`,
-          overflow: "auto",
-        }),
-      })}
-      role="list"
-      aria-label="Repositories"
-    >
-      {repos.map((repo) => (
-        <div key={repo.id} role="listitem">
-          <RepoItem repo={repo} />
-        </div>
-      ))}
-      {isLoadingMore && (
-        <div
-          className={css({
-            textAlign: "center",
-            py: "3",
-            color: "text.muted",
-          })}
-        >
-          Loading more...
-        </div>
-      )}
-      {hasMore && !isLoadingMore && (
-        <button
-          type="button"
-          onClick={onLoadMore}
-          className={css({
-            py: "2",
-            px: "4",
-            bg: "bg.subtle",
-            border: "1px solid",
-            borderColor: "border.default",
-            borderRadius: "md",
-            color: "text.default",
-            cursor: "pointer",
-            mx: "auto",
-            _hover: {
-              bg: "bg.canvas",
-            },
-          })}
-        >
-          Load more
-        </button>
-      )}
+    <div className={css({ pl: "4" })} role="list" aria-label="Repositories">
+      <Virtuoso
+        style={{ height: config.ui.repoListMaxHeight }}
+        data={repos}
+        endReached={() => {
+          if (hasMore && !isLoadingMore && onLoadMore) {
+            onLoadMore();
+          }
+        }}
+        overscan={200}
+        itemContent={(_index, repo) => (
+          <div
+            role="listitem"
+            className={css({
+              pb: "2",
+            })}
+          >
+            <RepoItem repo={repo} />
+          </div>
+        )}
+        components={{
+          Footer: () =>
+            isLoadingMore ? (
+              <div
+                className={css({
+                  textAlign: "center",
+                  py: "3",
+                  color: "text.muted",
+                })}
+              >
+                Loading more...
+              </div>
+            ) : null,
+        }}
+      />
     </div>
   );
 }

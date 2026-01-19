@@ -22,11 +22,11 @@
     "@ark-ui/react": "^4.5.0",
     "@formkit/auto-animate": "^0.8.2",
     "@park-ui/panda-preset": "^0.42.0",
-    "@tanstack/react-virtual": "^3.13.18",
     "p-retry": "^6.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-hotkeys-hook": "^4.6.1",
+    "react-virtuoso": "^4.18.1",
     "use-debounce": "^10.0.4",
     "web-vitals": "^4.2.4"
   },
