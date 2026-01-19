@@ -10,6 +10,7 @@ import { useSearchHistory } from "./hooks/useSearchHistory";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
 import { useDocumentTitle } from "usehooks-ts";
 import { useGitHubSearch } from "./hooks/useGitHubSearch";
+import { sanitizeQuery, getQueryFromURL, updateURL } from "./lib/searchParams";
 
 const UserAccordion = lazy(() => import("./components/UserAccordion"));
 
@@ -17,7 +18,7 @@ const MIN_QUERY_LENGTH = 3;
 const DEFAULT_TITLE = "GitHub User Search - Explore Users & Repositories";
 
 function App() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(getQueryFromURL);
   const [inputError, setInputError] = useState<string | null>(null);
 
   const { history, addToHistory, clearHistory } = useSearchHistory();
@@ -36,12 +37,15 @@ function App() {
 
   const handleSearch = useCallback(
     (inputQuery: string) => {
-      if (inputQuery.length < MIN_QUERY_LENGTH) {
+      const sanitized = sanitizeQuery(inputQuery);
+      if (sanitized.length < MIN_QUERY_LENGTH) {
         setInputError(`Please enter at least ${MIN_QUERY_LENGTH} characters`);
         return;
       }
       setInputError(null);
-      addToHistory(inputQuery);
+      setQuery(sanitized);
+      updateURL(sanitized);
+      addToHistory(sanitized);
     },
     [addToHistory]
   );
@@ -49,6 +53,7 @@ function App() {
   const handleClear = useCallback(() => {
     setQuery("");
     setInputError(null);
+    updateURL("");
     reset();
     setSelectedIndex(0);
     setExpandedIndex(null);

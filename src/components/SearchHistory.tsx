@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { css } from "../../styled-system/css";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
+import { config } from "../lib/config";
 
 interface SearchHistoryProps {
   history: string[];
@@ -12,15 +13,18 @@ interface SearchHistoryProps {
 export function SearchHistory({ history, currentQuery, onSelect, onClear }: SearchHistoryProps) {
   const [parentRef] = useAutoAnimate();
 
-  const filteredHistory = useMemo(() => {
-    if (!currentQuery.trim()) return history;
+  const hasHistory = history.length > 0;
+  const items = hasHistory ? history : config.search.defaultSuggestions;
+
+  const filteredItems = useMemo(() => {
+    if (!currentQuery.trim()) return items;
     const lower = currentQuery.toLowerCase();
-    return history.filter(
+    return items.filter(
       (item) => item.toLowerCase().includes(lower) && item.toLowerCase() !== lower
     );
-  }, [history, currentQuery]);
+  }, [items, currentQuery]);
 
-  if (filteredHistory.length === 0) return null;
+  if (filteredItems.length === 0) return null;
 
   return (
     <div
@@ -45,26 +49,28 @@ export function SearchHistory({ history, currentQuery, onSelect, onClear }: Sear
             color: "text.muted",
           })}
         >
-          Recent searches
+          {hasHistory ? "Recent searches" : "Suggestions"}
         </span>
-        <button
-          type="button"
-          onClick={onClear}
-          aria-label="Clear search history"
-          className={css({
-            fontSize: "sm",
-            color: "text.muted",
-            bg: "transparent",
-            border: "none",
-            cursor: "pointer",
-            textDecoration: "underline",
-            _hover: {
-              color: "text.default",
-            },
-          })}
-        >
-          Clear
-        </button>
+        {hasHistory && (
+          <button
+            type="button"
+            onClick={onClear}
+            aria-label="Clear search history"
+            className={css({
+              fontSize: "sm",
+              color: "text.muted",
+              bg: "transparent",
+              border: "none",
+              cursor: "pointer",
+              textDecoration: "underline",
+              _hover: {
+                color: "text.default",
+              },
+            })}
+          >
+            Clear
+          </button>
+        )}
       </div>
 
       <ul
@@ -78,7 +84,7 @@ export function SearchHistory({ history, currentQuery, onSelect, onClear }: Sear
           m: "0",
         })}
       >
-        {filteredHistory.map((item) => (
+        {filteredItems.map((item) => (
           <li key={item}>
             <button
               type="button"

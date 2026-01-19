@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { VitePWA } from "vite-plugin-pwa";
+import Sonda from "sonda/vite";
 import path from "path";
 
 const ReactCompilerConfig = {};
@@ -11,6 +12,11 @@ export default defineConfig({
       babel: {
         plugins: [["babel-plugin-react-compiler", ReactCompilerConfig]],
       },
+    }),
+    Sonda({
+      open: false,
+      detailed: true,
+      format: "json",
     }),
     VitePWA({
       registerType: "autoUpdate",
@@ -77,6 +83,7 @@ export default defineConfig({
     },
   },
   build: {
+    sourcemap: true,
     rollupOptions: {
       output: {
         manualChunks: {

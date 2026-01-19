@@ -36,4 +36,14 @@ export const config = {
     repoListScrollThreshold: getEnvNumber("VITE_REPO_LIST_SCROLL_THRESHOLD", 10),
     loadMoreThreshold: getEnvNumber("VITE_LOAD_MORE_THRESHOLD", 100),
   },
+
+  search: {
+    defaultSuggestions: [
+      "torvalds",
+      "microsoft",
+      "tradebyte",
+      "zulcom",
+      "howtologinquickwiththirtyninecharacters",
+    ],
+  },
 } as const;

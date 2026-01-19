@@ -1,5 +1,5 @@
 {
-  "name": "github-search",
+  "name": "@zulcom/github-search",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -22,6 +22,7 @@
     "@ark-ui/react": "^4.5.0",
     "@formkit/auto-animate": "^0.8.2",
     "@park-ui/panda-preset": "^0.42.0",
+    "@sentry/react": "^10.35.0",
     "p-retry": "^6.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
@@ -47,6 +48,7 @@
     "openapi-typescript": "^7.4.4",
     "oxlint": "^0.15.2",
     "prettier": "^3.4.2",
+    "sonda": "^0.10.1",
     "tsx": "^4.19.2",
     "typescript": "~5.7.2",
     "vite": "^6.0.7",

@@ -43,3 +43,4 @@ src/types/github.generated.ts
 dev-dist
 sw.js
 workbox-*.js
+.sonda/
