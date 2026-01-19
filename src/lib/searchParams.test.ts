@@ -48,6 +48,7 @@ describe("searchParams", () => {
     });
 
     afterEach(() => {
+      // @ts-ignore - restoring mocked location
       window.location = originalLocation;
     });
 
@@ -83,6 +84,7 @@ describe("searchParams", () => {
 
     afterEach(() => {
       vi.restoreAllMocks();
+      // @ts-ignore - restoring mocked location
       window.location = originalLocation;
     });
 
