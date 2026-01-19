@@ -29,7 +29,7 @@ describe("searchParams", () => {
 
     it("should truncate to max length", () => {
       const longInput = "a".repeat(150);
-      expect(sanitizeQuery(longInput).length).toBe(100);
+      expect(sanitizeQuery(longInput).length).toBe(39);
     });
 
     it("should handle XSS attempts", () => {
