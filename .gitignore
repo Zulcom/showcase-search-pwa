@@ -44,3 +44,6 @@ dev-dist
 sw.js
 workbox-*.js
 .sonda/
+
+# NDA
+prompts/requirements.pdf

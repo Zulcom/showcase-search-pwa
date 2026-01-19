@@ -1,4 +1,4 @@
-import { Suspense, lazy } from "react";
+import { lazy, Suspense } from "react";
 import { css } from "../../styled-system/css";
 import { KeyboardHints } from "./KeyboardHints";
 
@@ -19,6 +19,17 @@ export function Footer() {
       })}
     >
       <KeyboardHints />
+      <a
+        href="https://github.com/Zulcom/showcase-search-pwa"
+        target="_blank"
+        rel="noopener noreferrer"
+        className={css({
+          color: "fg.muted",
+          fontSize: "sm",
+        })}
+      >
+        Source code
+      </a>
       <Suspense fallback={null}>
         <WebVitals />
       </Suspense>
