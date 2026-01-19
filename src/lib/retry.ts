@@ -4,7 +4,9 @@ import { config } from "./config";
 
 const PERMANENT_ERROR_CODES = new Set([400, 401, 403, 404, 422]);
 
-const TRANSIENT_ERROR_CODES = new Set([408, 429, 500, 502, 503, 504]);
+const TRANSIENT_ERROR_CODES = new Set([408, 500, 502, 503, 504]);
+
+const RATE_LIMIT_ERROR_CODE = 429;
 
 export class HttpError extends Error {
   constructor(
@@ -22,10 +24,18 @@ export class HttpError extends Error {
   get isPermanent(): boolean {
     return PERMANENT_ERROR_CODES.has(this.status);
   }
+
+  get isRateLimit(): boolean {
+    return this.status === RATE_LIMIT_ERROR_CODE;
+  }
 }
 
 function shouldRetry(error: unknown): boolean {
   if (error instanceof Error && error.name === "AbortError") {
+    return false;
+  }
+
+  if (error instanceof HttpError && error.isRateLimit) {
     return false;
   }
 

@@ -20,21 +20,27 @@ function usePrefersReducedMotion(): boolean {
   return useSyncExternalStore(subscribeToReducedMotion, getReducedMotionSnapshot, getServerSnapshot);
 }
 
+const shimmerAnimatedClass = css({
+  background: "linear-gradient(90deg, token(colors.bg.subtle) 25%, token(colors.border.default) 50%, token(colors.bg.subtle) 75%)",
+  backgroundSize: "200% 100%",
+  animation: "shimmer 1.5s ease-in-out infinite",
+  borderRadius: "md",
+});
+
+const shimmerStaticClass = css({
+  background: "bg.subtle",
+  backgroundSize: "200% 100%",
+  animation: "none",
+  borderRadius: "md",
+});
+
 interface SkeletonProps {
   count?: number;
 }
 
 export function Skeleton({ count = 5 }: SkeletonProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-
-  const shimmerClass = css({
-    background: prefersReducedMotion
-      ? "bg.subtle"
-      : "linear-gradient(90deg, token(colors.bg.subtle) 25%, token(colors.border.default) 50%, token(colors.bg.subtle) 75%)",
-    backgroundSize: "200% 100%",
-    animation: prefersReducedMotion ? "none" : "shimmer 1.5s ease-in-out infinite",
-    borderRadius: "md",
-  });
+  const shimmerClass = prefersReducedMotion ? shimmerStaticClass : shimmerAnimatedClass;
 
   return (
     <div
@@ -72,15 +78,7 @@ export function Skeleton({ count = 5 }: SkeletonProps) {
 
 export function RepoSkeleton({ count = 3 }: SkeletonProps) {
   const prefersReducedMotion = usePrefersReducedMotion();
-
-  const shimmerClass = css({
-    background: prefersReducedMotion
-      ? "bg.subtle"
-      : "linear-gradient(90deg, token(colors.bg.subtle) 25%, token(colors.border.default) 50%, token(colors.bg.subtle) 75%)",
-    backgroundSize: "200% 100%",
-    animation: prefersReducedMotion ? "none" : "shimmer 1.5s ease-in-out infinite",
-    borderRadius: "md",
-  });
+  const shimmerClass = prefersReducedMotion ? shimmerStaticClass : shimmerAnimatedClass;
 
   return (
     <div
