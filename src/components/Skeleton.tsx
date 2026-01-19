@@ -1,12 +1,31 @@
+import { useSyncExternalStore } from "react";
 import { css } from "../../styled-system/css";
+
+function getReducedMotionSnapshot(): boolean {
+  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+}
+
+function getServerSnapshot(): boolean {
+  return false;
+}
+
+function subscribeToReducedMotion(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => {};
+  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+  mq.addEventListener("change", callback);
+  return () => mq.removeEventListener("change", callback);
+}
+
+function usePrefersReducedMotion(): boolean {
+  return useSyncExternalStore(subscribeToReducedMotion, getReducedMotionSnapshot, getServerSnapshot);
+}
 
 interface SkeletonProps {
   count?: number;
 }
 
 export function Skeleton({ count = 5 }: SkeletonProps) {
-  const prefersReducedMotion =
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const shimmerClass = css({
     background: prefersReducedMotion
@@ -52,8 +71,7 @@ export function Skeleton({ count = 5 }: SkeletonProps) {
 }
 
 export function RepoSkeleton({ count = 3 }: SkeletonProps) {
-  const prefersReducedMotion =
-    typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const prefersReducedMotion = usePrefersReducedMotion();
 
   const shimmerClass = css({
     background: prefersReducedMotion

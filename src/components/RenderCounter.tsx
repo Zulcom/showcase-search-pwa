@@ -11,9 +11,7 @@ export function RenderCounter({ name, enabled = false }: RenderCounterProps) {
   renderCount.current += 1;
 
   useEffect(() => {
-    if (enabled) {
-      console.log(`[RenderCounter] ${name}: render #${renderCount.current}`);
-    }
+    if (enabled) console.log(`[RenderCounter] ${name}: render #${renderCount.current}`);
   });
 
   if (!enabled || import.meta.env.PROD) return null;

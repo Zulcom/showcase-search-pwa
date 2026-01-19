@@ -25,21 +25,18 @@ test.describe("User flow", () => {
   });
 
   test("should toggle theme", async ({ page }) => {
-    // Clear localStorage to ensure predictable initial state
     await page.evaluate(() => localStorage.removeItem("theme"));
     await page.reload();
 
     const themeButton = page.getByRole("button", { name: /Switch to.*theme/i });
     await expect(themeButton).toBeVisible();
 
-    // Initial state is "system" which shows as light/dark based on OS
-    // Cycle through: system → light → dark → system
-    await themeButton.click(); // system → light
-    await themeButton.click(); // light → dark
+    await themeButton.click();
+    await themeButton.click();
     await expect(page.locator("html")).toHaveAttribute("data-color-mode", "dark");
 
-    await themeButton.click(); // dark → system
-    await themeButton.click(); // system → light
+    await themeButton.click();
+    await themeButton.click();
     await expect(page.locator("html")).toHaveAttribute("data-color-mode", "light");
   });
 
@@ -113,7 +110,6 @@ test.describe("User flow", () => {
     await expect(page.locator('[role="listitem"]').nth(1)).toBeVisible();
 
     await page.keyboard.press("Enter");
-    // Check that user accordion expanded (aria-expanded becomes true)
     const expandedButton = page.getByRole("button", { name: /google/i, expanded: true }).first();
     await expect(expandedButton).toBeVisible({ timeout: 5000 });
   });
@@ -125,11 +121,9 @@ test.describe("User flow", () => {
     const searchButton = page.getByRole("button", { name: "Search", exact: true });
     await searchButton.click();
 
-    // Wait for results with timeout (API might be rate limited)
     try {
       await page.waitForSelector('[role="list"][aria-label="GitHub users"]', { timeout: 10000 });
     } catch {
-      // If search fails, the history item is still added
     }
 
     await page.goto("/");

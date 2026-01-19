@@ -17,13 +17,21 @@ interface UserAccordionProps {
 interface RepoState {
   repos: GitHubRepository[];
   isLoading: boolean;
+  isLoadingMore: boolean;
   error: string | null;
+  page: number;
+  hasMore: boolean;
 }
+
+const PER_PAGE = 30;
 
 const defaultRepoState: RepoState = {
   repos: [],
   isLoading: false,
+  isLoadingMore: false,
   error: null,
+  page: 1,
+  hasMore: false,
 };
 
 interface UserItemProps {
@@ -35,6 +43,7 @@ interface UserItemProps {
   onSelect: () => void;
   onToggle: () => void;
   onLoadRepos: () => void;
+  onLoadMore: () => void;
   onReset: () => void;
 }
 
@@ -46,6 +55,7 @@ const UserItem = memo(function UserItem({
   onSelect,
   onToggle,
   onLoadRepos,
+  onLoadMore,
   onReset,
 }: UserItemProps) {
   const handleToggle = useCallback(() => {
@@ -174,6 +184,9 @@ const UserItem = memo(function UserItem({
               <RepoList
                 repos={repoState.repos}
                 isLoading={repoState.isLoading}
+                isLoadingMore={repoState.isLoadingMore}
+                hasMore={repoState.hasMore}
+                onLoadMore={onLoadMore}
               />
             )}
           </div>
@@ -201,13 +214,16 @@ export function UserAccordion({
     });
 
     try {
-      const repos = await getUserRepos(username, 1, 30);
+      const repos = await getUserRepos(username, 1, PER_PAGE);
       setRepoStates((prev) => {
         const next = new Map(prev);
         next.set(username, {
           repos,
           isLoading: false,
+          isLoadingMore: false,
           error: null,
+          page: 1,
+          hasMore: repos.length === PER_PAGE,
         });
         return next;
       });
@@ -222,6 +238,55 @@ export function UserAccordion({
       });
     }
   }, []);
+
+  const loadMoreForUser = useCallback(async (username: string) => {
+    const currentState = repoStates.get(username);
+    if (!currentState || currentState.isLoadingMore || !currentState.hasMore) {
+      return;
+    }
+
+    const nextPage = currentState.page + 1;
+
+    setRepoStates((prev) => {
+      const next = new Map(prev);
+      const current = prev.get(username);
+      if (current) {
+        next.set(username, { ...current, isLoadingMore: true });
+      }
+      return next;
+    });
+
+    try {
+      const newRepos = await getUserRepos(username, nextPage, PER_PAGE);
+      setRepoStates((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(username);
+        if (current) {
+          next.set(username, {
+            ...current,
+            repos: [...current.repos, ...newRepos],
+            isLoadingMore: false,
+            page: nextPage,
+            hasMore: newRepos.length === PER_PAGE,
+          });
+        }
+        return next;
+      });
+    } catch (err) {
+      setRepoStates((prev) => {
+        const next = new Map(prev);
+        const current = prev.get(username);
+        if (current) {
+          next.set(username, {
+            ...current,
+            isLoadingMore: false,
+            error: err instanceof Error ? err.message : "Failed to load more repositories",
+          });
+        }
+        return next;
+      });
+    }
+  }, [repoStates]);
 
   const resetForUser = useCallback((username: string) => {
     setRepoStates((prev) => {
@@ -253,6 +318,7 @@ export function UserAccordion({
             onSelect={() => onSelectUser(index)}
             onToggle={() => onExpandUser(expandedIndex === index ? null : index)}
             onLoadRepos={() => loadReposForUser(user.login)}
+            onLoadMore={() => loadMoreForUser(user.login)}
             onReset={() => resetForUser(user.login)}
           />
         </div>

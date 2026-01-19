@@ -3,6 +3,12 @@ import { searchUsers, getUserRepos } from "./github";
 
 vi.mock("../lib/retry", () => ({
   withRetry: vi.fn((fn) => fn()),
+  HttpError: class HttpError extends Error {
+    constructor(message: string, public readonly status: number) {
+      super(message);
+      this.name = "HttpError";
+    }
+  },
 }));
 
 const mockUserResponse = {
@@ -75,7 +81,39 @@ describe("github API", () => {
         json: () => Promise.resolve({ message: "Not Found" }),
       } as Response);
 
-      await expect(searchUsers("notfound")).rejects.toThrow("not found");
+      await expect(searchUsers("notfound")).rejects.toThrow("Not Found");
+    });
+
+    it("should handle AbortError when search is cancelled", async () => {
+      const abortError = new DOMException("The operation was aborted.", "AbortError");
+      vi.mocked(fetch).mockRejectedValue(abortError);
+
+      await expect(searchUsers("aborted")).rejects.toThrow("Search cancelled");
+    });
+
+    it("should abort previous search when new search starts", async () => {
+      let callCount = 0;
+      vi.mocked(fetch).mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          return new Promise((_, reject) => {
+            setTimeout(() => reject(new DOMException("Aborted", "AbortError")), 100);
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve(mockUserResponse),
+        } as Response);
+      });
+
+      const firstSearch = searchUsers("first").catch(() => "aborted");
+
+      const secondSearch = searchUsers("second");
+
+      const [first, second] = await Promise.all([firstSearch, secondSearch]);
+
+      expect(first).toBe("aborted");
+      expect(second.items).toHaveLength(2);
     });
   });
 

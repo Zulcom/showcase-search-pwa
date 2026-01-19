@@ -1,4 +1,4 @@
-import { withRetry } from "../lib/retry";
+import { withRetry, HttpError } from "../lib/retry";
 import { getFromCache, setInCache } from "../lib/cache";
 import { logger } from "../lib/logger";
 import type {
@@ -26,14 +26,11 @@ async function fetchWithAuth<T>(endpoint: string, signal?: AbortSignal): Promise
     }));
 
     if (response.status === 403 && error.message.includes("rate limit")) {
-      throw new Error("GitHub API rate limit exceeded. Please try again later.");
+      throw new HttpError("GitHub API rate limit exceeded. Please try again later.", 429);
     }
 
-    if (response.status === 404) {
-      throw new Error("Resource not found");
-    }
-
-    throw new Error(error.message || `Request failed with status ${response.status}`);
+    const message = error.message || `Request failed with status ${response.status}`;
+    throw new HttpError(message, response.status);
   }
 
   return response.json();
