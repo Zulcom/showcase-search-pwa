@@ -17,17 +17,13 @@ interface UserAccordionProps {
 interface RepoState {
   repos: GitHubRepository[];
   isLoading: boolean;
-  isLoadingMore: boolean;
   error: string | null;
-  hasMore: boolean;
 }
 
 const defaultRepoState: RepoState = {
   repos: [],
   isLoading: false,
-  isLoadingMore: false,
   error: null,
-  hasMore: false,
 };
 
 interface UserItemProps {
@@ -178,9 +174,6 @@ const UserItem = memo(function UserItem({
               <RepoList
                 repos={repoState.repos}
                 isLoading={repoState.isLoading}
-                isLoadingMore={repoState.isLoadingMore}
-                hasMore={repoState.hasMore}
-                onLoadMore={() => {}}
               />
             )}
           </div>
@@ -214,9 +207,7 @@ export function UserAccordion({
         next.set(username, {
           repos,
           isLoading: false,
-          isLoadingMore: false,
           error: null,
-          hasMore: repos.length === 30,
         });
         return next;
       });

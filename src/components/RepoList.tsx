@@ -6,16 +6,9 @@ import type { GitHubRepository } from "../types/github.generated";
 interface RepoListProps {
   repos: GitHubRepository[];
   isLoading: boolean;
-  isLoadingMore: boolean;
-  hasMore: boolean;
-  onLoadMore: () => void;
 }
 
-export function RepoList({
-  repos,
-  isLoading,
-  isLoadingMore,
-}: RepoListProps) {
+export function RepoList({ repos, isLoading }: RepoListProps) {
   if (isLoading) {
     return <RepoSkeleton count={5} />;
   }
@@ -50,11 +43,6 @@ export function RepoList({
           <RepoItem repo={repo} />
         </div>
       ))}
-      {isLoadingMore && (
-        <div className={css({ py: "2" })}>
-          <RepoSkeleton count={2} />
-        </div>
-      )}
     </div>
   );
 }
