@@ -1,22 +1,26 @@
 import { withRetry, HttpError } from "../lib/retry";
 import { getFromCache, setInCache } from "../lib/cache";
 import { logger } from "../lib/logger";
+import { config } from "../lib/config";
 import type {
   GitHubUserSearchResponse,
   GitHubRepository,
   GitHubError,
 } from "../types/github.generated";
 
-const BASE_URL = "https://api.github.com";
-const CACHE_TTL = 1000 * 60 * 5;
-
 let currentSearchController: AbortController | null = null;
 
 async function fetchWithAuth<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    headers: {
-      Accept: "application/vnd.github.v3+json",
-    },
+  const headers: HeadersInit = {
+    Accept: "application/vnd.github.v3+json",
+  };
+
+  if (config.github.token) {
+    headers.Authorization = `Bearer ${config.github.token}`;
+  }
+
+  const response = await fetch(`${config.github.apiUrl}${endpoint}`, {
+    headers,
     signal,
   });
 
@@ -64,7 +68,7 @@ export async function searchUsers(
       )
     );
 
-    setInCache(cacheKey, result, CACHE_TTL);
+    setInCache(cacheKey, result, config.cache.ttlMs);
     return result;
   } catch (error) {
     if (error instanceof Error && error.name === "AbortError") {
@@ -95,6 +99,6 @@ export async function getUserRepos(
     )
   );
 
-  setInCache(cacheKey, result, CACHE_TTL);
+  setInCache(cacheKey, result, config.cache.ttlMs);
   return result;
 }

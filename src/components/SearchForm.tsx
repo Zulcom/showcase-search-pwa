@@ -1,9 +1,9 @@
 import { useCallback, useRef, useState, useEffect, type FormEvent } from "react";
 import { css } from "../../styled-system/css";
 import { useClipboard } from "../hooks/useClipboard";
-import { useDebouncedFn } from "../hooks/useDebounce";
 import { useHotkeys } from "react-hotkeys-hook";
 import { CloseIcon, ClipboardPasteIcon, SearchIcon } from "./icons";
+import { useDebouncedCallback } from 'use-debounce';
 
 interface SearchFormProps {
   query: string;
@@ -26,7 +26,7 @@ export function SearchForm({
   const [isFocused, setIsFocused] = useState(false);
   const { paste, isSupported: clipboardSupported } = useClipboard();
 
-  const debouncedSearch = useDebouncedFn((q: string) => {
+  const debouncedSearch = useDebouncedCallback((q: string) => {
     if (q.length >= 3) {
       onSearch(q);
     }

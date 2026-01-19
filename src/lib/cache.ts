@@ -1,8 +1,7 @@
 import { logger } from "./logger";
+import { config } from "./config";
 
 const CACHE_PREFIX = "github-search:";
-const DEFAULT_TTL = 1000 * 60 * 60;
-const MAX_CACHE_ENTRIES = 50;
 
 interface CacheEntry<T> {
   data: T;
@@ -54,7 +53,7 @@ function evictLRU(): void {
 
   entries.sort((a, b) => a.lastAccessed - b.lastAccessed);
 
-  const toRemove = entries.length - MAX_CACHE_ENTRIES + 1;
+  const toRemove = entries.length - config.cache.maxEntries + 1;
   if (toRemove > 0) {
     for (let i = 0; i < toRemove; i++) {
       localStorage.removeItem(entries[i].key);
@@ -63,14 +62,14 @@ function evictLRU(): void {
   }
 }
 
-export function setInCache<T>(key: string, data: T, ttl: number = DEFAULT_TTL): void {
+export function setInCache<T>(key: string, data: T, ttl: number = config.cache.ttlMs): void {
   try {
     const cacheKeys = [];
     for (let i = 0; i < localStorage.length; i++) {
       const k = localStorage.key(i);
       if (k?.startsWith(CACHE_PREFIX)) cacheKeys.push(k);
     }
-    if (cacheKeys.length >= MAX_CACHE_ENTRIES) {
+    if (cacheKeys.length >= config.cache.maxEntries) {
       evictLRU();
     }
 

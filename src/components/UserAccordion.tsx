@@ -4,6 +4,7 @@ import { css } from "../../styled-system/css";
 import { RepoList } from "./RepoList";
 import { RenderCounter } from "./RenderCounter";
 import { getUserRepos } from "../api/github";
+import { config } from "../lib/config";
 import type { GitHubUser, GitHubRepository } from "../types/github.generated";
 
 interface UserAccordionProps {
@@ -22,8 +23,6 @@ interface RepoState {
   page: number;
   hasMore: boolean;
 }
-
-const PER_PAGE = 30;
 
 const defaultRepoState: RepoState = {
   repos: [],
@@ -214,7 +213,7 @@ export function UserAccordion({
     });
 
     try {
-      const repos = await getUserRepos(username, 1, PER_PAGE);
+      const repos = await getUserRepos(username, 1, config.pagination.reposPerPage);
       setRepoStates((prev) => {
         const next = new Map(prev);
         next.set(username, {
@@ -223,7 +222,7 @@ export function UserAccordion({
           isLoadingMore: false,
           error: null,
           page: 1,
-          hasMore: repos.length === PER_PAGE,
+          hasMore: repos.length === config.pagination.reposPerPage,
         });
         return next;
       });
@@ -257,7 +256,7 @@ export function UserAccordion({
     });
 
     try {
-      const newRepos = await getUserRepos(username, nextPage, PER_PAGE);
+      const newRepos = await getUserRepos(username, nextPage, config.pagination.reposPerPage);
       setRepoStates((prev) => {
         const next = new Map(prev);
         const current = prev.get(username);
@@ -267,7 +266,7 @@ export function UserAccordion({
             repos: [...current.repos, ...newRepos],
             isLoadingMore: false,
             page: nextPage,
-            hasMore: newRepos.length === PER_PAGE,
+            hasMore: newRepos.length === config.pagination.reposPerPage,
           });
         }
         return next;

@@ -1,5 +1,6 @@
 import pRetry, { AbortError, type Options } from "p-retry";
 import { logger } from "./logger";
+import { config } from "./config";
 
 const PERMANENT_ERROR_CODES = new Set([400, 401, 403, 404, 422]);
 
@@ -44,9 +45,9 @@ function shouldRetry(error: unknown): boolean {
 }
 
 const DEFAULT_OPTIONS: Options = {
-  retries: 3,
-  minTimeout: 1000,
-  maxTimeout: 10000,
+  retries: config.retry.count,
+  minTimeout: config.retry.minTimeoutMs,
+  maxTimeout: config.retry.maxTimeoutMs,
   shouldRetry,
   onFailedAttempt: (error) => {
     logger.warn(

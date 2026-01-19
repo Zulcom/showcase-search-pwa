@@ -2,6 +2,7 @@ import { useCallback, useRef } from "react";
 import { css } from "../../styled-system/css";
 import { RepoItem } from "./RepoItem";
 import { RepoSkeleton } from "./Skeleton";
+import { config } from "../lib/config";
 import type { GitHubRepository } from "../types/github.generated";
 
 interface RepoListProps {
@@ -11,10 +12,6 @@ interface RepoListProps {
   hasMore?: boolean;
   onLoadMore?: () => void;
 }
-
-const MAX_VISIBLE_HEIGHT = 400;
-const SCROLL_THRESHOLD = 10;
-const LOAD_MORE_THRESHOLD = 100;
 
 export function RepoList({
   repos,
@@ -33,7 +30,7 @@ export function RepoList({
     const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
     const distanceFromBottom = scrollHeight - scrollTop - clientHeight;
 
-    if (distanceFromBottom < LOAD_MORE_THRESHOLD) {
+    if (distanceFromBottom < config.ui.loadMoreThreshold) {
       onLoadMore();
     }
   }, [hasMore, isLoadingMore, onLoadMore]);
@@ -56,7 +53,7 @@ export function RepoList({
     );
   }
 
-  const useScroll = repos.length >= SCROLL_THRESHOLD;
+  const useScroll = repos.length >= config.ui.repoListScrollThreshold;
 
   return (
     <div
@@ -68,7 +65,7 @@ export function RepoList({
         gap: "2",
         pl: "4",
         ...(useScroll && {
-          maxHeight: `${MAX_VISIBLE_HEIGHT}px`,
+          maxHeight: `${config.ui.repoListMaxHeight}px`,
           overflow: "auto",
         }),
       })}
