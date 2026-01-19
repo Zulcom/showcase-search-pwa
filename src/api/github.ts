@@ -2,11 +2,7 @@ import { withRetry, HttpError } from "../lib/retry";
 import { getFromCache, setInCache } from "../lib/cache";
 import { logger } from "../lib/logger";
 import { config } from "../lib/config";
-import type {
-  GitHubUserSearchResponse,
-  GitHubRepository,
-  GitHubError,
-} from "../types/github";
+import type { GitHubUserSearchResponse, GitHubRepository, GitHubError } from "../types/github";
 
 let currentSearchController: AbortController | null = null;
 

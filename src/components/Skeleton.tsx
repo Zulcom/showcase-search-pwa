@@ -2,7 +2,8 @@ import { useMediaQuery } from "usehooks-ts";
 import { css } from "../../styled-system/css";
 
 const shimmerAnimatedClass = css({
-  background: "linear-gradient(90deg, token(colors.bg.subtle) 25%, token(colors.border.default) 50%, token(colors.bg.subtle) 75%)",
+  background:
+    "linear-gradient(90deg, token(colors.bg.subtle) 25%, token(colors.border.default) 50%, token(colors.bg.subtle) 75%)",
   backgroundSize: "200% 100%",
   animation: "shimmer 1.5s ease-in-out infinite",
   borderRadius: "md",

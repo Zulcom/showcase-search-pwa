@@ -16,14 +16,16 @@ export function Header() {
         borderColor: "border.default",
       })}
     >
-      <h1
-        className={css({
-          fontSize: "xl",
-          fontWeight: "bold",
-        })}
-      >
-        GitHub User Search
-      </h1>
+      <a href="/">
+        <h1
+          className={css({
+            fontSize: "xl",
+            fontWeight: "bold",
+          })}
+        >
+          GitHub User Search
+        </h1>
+      </a>
       <div className={css({ display: "flex", gap: "2", alignItems: "center" })}>
         {!isOnline && (
           <span

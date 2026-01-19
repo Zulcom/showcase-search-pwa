@@ -15,8 +15,6 @@ export default defineConfig({
     }),
     Sonda({
       open: false,
-      detailed: true,
-      format: "json",
     }),
     VitePWA({
       registerType: "autoUpdate",

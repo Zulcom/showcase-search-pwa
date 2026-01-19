@@ -36,7 +36,9 @@ async function generateTypes() {
     collectDeps(name);
   }
 
-  console.log(`Generating types for ${collectedSchemas.size} schemas (filtered from ${Object.keys(schemas).length})`);
+  console.log(
+    `Generating types for ${collectedSchemas.size} schemas (filtered from ${Object.keys(schemas).length})`
+  );
 
   let output = ``;
 

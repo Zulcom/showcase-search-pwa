@@ -4,7 +4,10 @@ import { searchUsers, getUserRepos } from "./github";
 vi.mock("../lib/retry", () => ({
   withRetry: vi.fn((fn) => fn()),
   HttpError: class HttpError extends Error {
-    constructor(message: string, public readonly status: number) {
+    constructor(
+      message: string,
+      public readonly status: number
+    ) {
       super(message);
       this.name = "HttpError";
     }

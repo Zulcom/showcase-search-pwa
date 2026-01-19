@@ -23,7 +23,9 @@ function App() {
 
   const { history, addToHistory, clearHistory } = useSearchHistory();
   const { users, isLoading, isIdle, fetchError, reset } = useGitHubSearch(query);
-  const { selectedIndex, setSelectedIndex, expandedIndex, setExpandedIndex } = useKeyboardNav(users.length);
+  const { selectedIndex, setSelectedIndex, expandedIndex, setExpandedIndex } = useKeyboardNav(
+    users.length
+  );
 
   useEffect(() => {
     if (!isLoading && users.length > 0) {

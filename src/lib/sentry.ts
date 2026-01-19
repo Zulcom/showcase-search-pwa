@@ -1,12 +1,5 @@
 import * as Sentry from "@sentry/react";
-import {
-  onCLS,
-  onFCP,
-  onINP,
-  onLCP,
-  onTTFB,
-  type Metric,
-} from "web-vitals";
+import { onCLS, onFCP, onINP, onLCP, onTTFB, type Metric } from "web-vitals";
 
 function sendToSentry(metric: Metric) {
   Sentry.metrics.distribution(`web_vitals.${metric.name}`, metric.value, {

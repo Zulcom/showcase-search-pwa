@@ -90,10 +90,7 @@ describe("withRetry", () => {
 
   it("should retry on transient HTTP errors", async () => {
     const transientError = new HttpError("Service Unavailable", 503);
-    const fn = vi
-      .fn()
-      .mockRejectedValueOnce(transientError)
-      .mockResolvedValue("success");
+    const fn = vi.fn().mockRejectedValueOnce(transientError).mockResolvedValue("success");
 
     const result = await withRetry(fn, { retries: 1, minTimeout: 1 });
 
@@ -103,10 +100,7 @@ describe("withRetry", () => {
 
   it("should retry on TypeError (network errors)", async () => {
     const networkError = new TypeError("Failed to fetch");
-    const fn = vi
-      .fn()
-      .mockRejectedValueOnce(networkError)
-      .mockResolvedValue("success");
+    const fn = vi.fn().mockRejectedValueOnce(networkError).mockResolvedValue("success");
 
     const result = await withRetry(fn, { retries: 1, minTimeout: 1 });
 

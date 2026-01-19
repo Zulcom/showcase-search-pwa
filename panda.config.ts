@@ -26,6 +26,32 @@ export default defineConfig({
             link: { value: "#58a6ff" },
             star: { value: "#e3b341" },
           },
+          // Radix Yellow scale
+          yellow: {
+            9: { value: "#ffe629" },
+            10: { value: "#ffdc00" },
+            11: { value: "#9e6c00" },
+          },
+        },
+      },
+      semanticTokens: {
+        colors: {
+          text: {
+            default: { value: "{colors.fg.default}" },
+            muted: { value: "{colors.fg.muted}" },
+          },
+          blue: {
+            500: { value: "{colors.blue.9}" },
+            600: { value: "{colors.blue.10}" },
+          },
+          yellow: {
+            500: { value: "{colors.yellow.9}" },
+            600: { value: "{colors.yellow.10}" },
+          },
+          red: {
+            500: { value: "{colors.red.9}" },
+            600: { value: "{colors.red.10}" },
+          },
         },
       },
       keyframes: {

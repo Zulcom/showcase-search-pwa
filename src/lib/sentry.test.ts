@@ -53,11 +53,7 @@ describe("sentry", () => {
       const clsCallback = vi.mocked(onCLS).mock.calls[0][0];
       clsCallback({ name: "CLS", value: 0.1, rating: "good" } as never);
 
-      expect(Sentry.metrics.distribution).toHaveBeenCalledWith(
-        "web_vitals.CLS",
-        0.1,
-        { unit: "" }
-      );
+      expect(Sentry.metrics.distribution).toHaveBeenCalledWith("web_vitals.CLS", 0.1, { unit: "" });
     });
 
     it("should send LCP metric with millisecond unit", () => {
@@ -66,11 +62,9 @@ describe("sentry", () => {
       const lcpCallback = vi.mocked(onLCP).mock.calls[0][0];
       lcpCallback({ name: "LCP", value: 2500, rating: "good" } as never);
 
-      expect(Sentry.metrics.distribution).toHaveBeenCalledWith(
-        "web_vitals.LCP",
-        2500,
-        { unit: "millisecond" }
-      );
+      expect(Sentry.metrics.distribution).toHaveBeenCalledWith("web_vitals.LCP", 2500, {
+        unit: "millisecond",
+      });
     });
 
     it("should send FCP metric with millisecond unit", () => {
@@ -79,11 +73,9 @@ describe("sentry", () => {
       const fcpCallback = vi.mocked(onFCP).mock.calls[0][0];
       fcpCallback({ name: "FCP", value: 1800, rating: "good" } as never);
 
-      expect(Sentry.metrics.distribution).toHaveBeenCalledWith(
-        "web_vitals.FCP",
-        1800,
-        { unit: "millisecond" }
-      );
+      expect(Sentry.metrics.distribution).toHaveBeenCalledWith("web_vitals.FCP", 1800, {
+        unit: "millisecond",
+      });
     });
   });
 });
