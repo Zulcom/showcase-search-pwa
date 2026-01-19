@@ -2,7 +2,7 @@ import { Virtuoso } from "react-virtuoso";
 import { css } from "../../styled-system/css";
 import { RepoItem } from "./RepoItem";
 import { config } from "../lib/config";
-import type { GitHubRepository } from "../types/github.generated";
+import type { GitHubRepository } from "../types/github";
 
 interface VirtualizedRepoListProps {
   repos: GitHubRepository[];

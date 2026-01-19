@@ -6,7 +6,7 @@ import type {
   GitHubUserSearchResponse,
   GitHubRepository,
   GitHubError,
-} from "../types/github.generated";
+} from "../types/github";
 
 let currentSearchController: AbortController | null = null;
 

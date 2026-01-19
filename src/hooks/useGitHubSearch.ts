@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { searchUsers } from "../api/github";
-import type { GitHubUser } from "../types/github.generated";
+import type { GitHubUser } from "../types/github";
 
 export enum LoadingState {
   NOT_INIT = "NOT_INIT",

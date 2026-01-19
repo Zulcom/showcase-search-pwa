@@ -1,6 +1,6 @@
 import { css } from "../../styled-system/css";
 import { StarIcon } from "./icons";
-import type { GitHubRepository } from "../types/github.generated";
+import type { GitHubRepository } from "../types/github";
 
 interface RepoItemProps {
   repo: GitHubRepository;

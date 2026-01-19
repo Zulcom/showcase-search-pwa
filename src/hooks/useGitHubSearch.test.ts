@@ -2,7 +2,7 @@ import { renderHook, waitFor } from "@testing-library/react";
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useGitHubSearch, LoadingState } from "./useGitHubSearch";
 import * as githubApi from "../api/github";
-import type { GitHubUser } from "../types/github.generated";
+import type { GitHubUser } from "../types/github";
 
 vi.mock("../api/github");
 

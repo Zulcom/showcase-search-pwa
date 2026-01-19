@@ -2,10 +2,9 @@ import { useCallback, useState, useEffect, useRef, memo } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { css } from "../../styled-system/css";
 import { RepoList } from "./RepoList";
-import { RenderCounter } from "./RenderCounter";
 import { getUserRepos } from "../api/github";
 import { config } from "../lib/config";
-import type { GitHubUser, GitHubRepository } from "../types/github.generated";
+import type { GitHubUser, GitHubRepository } from "../types/github";
 
 interface UserAccordionProps {
   users: GitHubUser[];
@@ -78,7 +77,6 @@ const UserItem = memo(function UserItem({
         position: "relative",
       })}
     >
-      <RenderCounter name={user.login} enabled />
       <button
         type="button"
         onClick={handleToggle}
