@@ -19,11 +19,12 @@ test.describe("Search functionality", () => {
 
   test("should disable search button when less than 3 characters", async ({ page }) => {
     const searchInput = page.getByRole("textbox", { name: "Search query" });
-    const searchButton = page.getByRole("button", { name: "Search", exact: true });
+    const searchButton = page.locator('button[type="submit"]');
 
     await searchInput.fill("ab");
     await expect(searchButton).toBeDisabled();
 
+    await searchInput.clear();
     await searchInput.fill("abc");
     await expect(searchButton).toBeEnabled();
   });

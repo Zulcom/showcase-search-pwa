@@ -35,7 +35,6 @@ const defaultRepoState: RepoState = {
 
 interface UserItemProps {
   user: GitHubUser;
-  index: number;
   isSelected: boolean;
   isExpanded: boolean;
   repoState: RepoState;
@@ -195,7 +194,7 @@ const UserItem = memo(function UserItem({
   );
 });
 
-export function UserAccordion({
+export default function UserAccordion({
   users,
   selectedIndex,
   expandedIndex,
@@ -326,7 +325,6 @@ export function UserAccordion({
         <div key={user.id} role="listitem">
           <UserItem
             user={user}
-            index={index}
             isSelected={selectedIndex === index}
             isExpanded={expandedIndex === index}
             repoState={repoStates.get(user.login) || defaultRepoState}

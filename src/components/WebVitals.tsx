@@ -36,7 +36,7 @@ function getRating(
   return "poor";
 }
 
-export function WebVitals() {
+export default function WebVitals() {
   const [vitals, setVitals] = useState<Vitals>({
     CLS: null,
     FCP: null,

@@ -1,4 +1,4 @@
-import pRetry, { AbortError, type Options } from "p-retry";
+import pRetry, { type Options } from "p-retry";
 import { logger } from "./logger";
 import { config } from "./config";
 
@@ -73,5 +73,3 @@ export async function withRetry<T>(
 ): Promise<T> {
   return pRetry(fn, { ...DEFAULT_OPTIONS, ...options });
 }
-
-export { AbortError };

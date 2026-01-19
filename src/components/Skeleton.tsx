@@ -1,24 +1,5 @@
-import { useSyncExternalStore } from "react";
+import { useMediaQuery } from "usehooks-ts";
 import { css } from "../../styled-system/css";
-
-function getReducedMotionSnapshot(): boolean {
-  return typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-function getServerSnapshot(): boolean {
-  return false;
-}
-
-function subscribeToReducedMotion(callback: () => void): () => void {
-  if (typeof window === "undefined") return () => {};
-  const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-  mq.addEventListener("change", callback);
-  return () => mq.removeEventListener("change", callback);
-}
-
-function usePrefersReducedMotion(): boolean {
-  return useSyncExternalStore(subscribeToReducedMotion, getReducedMotionSnapshot, getServerSnapshot);
-}
 
 const shimmerAnimatedClass = css({
   background: "linear-gradient(90deg, token(colors.bg.subtle) 25%, token(colors.border.default) 50%, token(colors.bg.subtle) 75%)",
@@ -39,7 +20,7 @@ interface SkeletonProps {
 }
 
 export function Skeleton({ count = 5 }: SkeletonProps) {
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const shimmerClass = prefersReducedMotion ? shimmerStaticClass : shimmerAnimatedClass;
 
   return (
@@ -77,7 +58,7 @@ export function Skeleton({ count = 5 }: SkeletonProps) {
 }
 
 export function RepoSkeleton({ count = 3 }: SkeletonProps) {
-  const prefersReducedMotion = usePrefersReducedMotion();
+  const prefersReducedMotion = useMediaQuery("(prefers-reduced-motion: reduce)");
   const shimmerClass = prefersReducedMotion ? shimmerStaticClass : shimmerAnimatedClass;
 
   return (

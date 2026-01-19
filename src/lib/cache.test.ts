@@ -100,4 +100,76 @@ describe("cache", () => {
     expect(localStorage.getItem("other-key")).toBe("value");
     expect(getFromCache("cached-key")).toBeNull();
   });
+
+  it("should evict LRU entries and retry on QuotaExceededError", () => {
+    setInCache("old-key", "old-value");
+    vi.advanceTimersByTime(100);
+    setInCache("newer-key", "newer-value");
+
+    const quotaError = new DOMException("Quota exceeded", "QuotaExceededError");
+    let callCount = 0;
+    const originalSetItem = localStorage.setItem.bind(localStorage);
+
+    localStorage.setItem = vi.fn((key: string, value: string) => {
+      if (key === "github-search:quota-key" && callCount === 0) {
+        callCount++;
+        throw quotaError;
+      }
+      return originalSetItem(key, value);
+    });
+
+    setInCache("quota-key", "quota-value");
+
+    localStorage.setItem = originalSetItem;
+
+    expect(getFromCache("quota-key")).toBe("quota-value");
+  });
+
+  it("should handle QuotaExceededError even when retry fails", () => {
+    const quotaError = new DOMException("Quota exceeded", "QuotaExceededError");
+    const originalSetItem = localStorage.setItem;
+
+    localStorage.setItem = vi.fn(() => {
+      throw quotaError;
+    });
+
+    expect(() => setInCache("key", "value")).not.toThrow();
+
+    localStorage.setItem = originalSetItem;
+  });
+
+  it("should evict LRU entries when cache is full", () => {
+    vi.doMock("./config", () => ({
+      config: {
+        cache: {
+          maxEntries: 2,
+          ttlMs: 300000,
+        },
+      },
+    }));
+
+    setInCache("key1", "value1");
+    vi.advanceTimersByTime(100);
+    setInCache("key2", "value2");
+    vi.advanceTimersByTime(100);
+
+    getFromCache("key1");
+    vi.advanceTimersByTime(100);
+
+    setInCache("key3", "value3");
+
+    expect(getFromCache("key3")).toBe("value3");
+  });
+
+  it("should remove invalid cache entries during LRU eviction", () => {
+    setInCache("valid-key", "valid-value");
+
+    localStorage.setItem("github-search:invalid-entry", "not-valid-json{{{");
+
+    for (let i = 0; i < 50; i++) {
+      setInCache(`key${i}`, `value${i}`);
+    }
+
+    expect(localStorage.getItem("github-search:invalid-entry")).toBeNull();
+  });
 });

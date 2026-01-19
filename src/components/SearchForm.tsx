@@ -1,9 +1,9 @@
-import { useCallback, useRef, useState, useEffect, type FormEvent } from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
+import { useDebounceCallback } from "usehooks-ts";
 import { css } from "../../styled-system/css";
 import { useClipboard } from "../hooks/useClipboard";
 import { useHotkeys } from "react-hotkeys-hook";
 import { CloseIcon, ClipboardPasteIcon, SearchIcon } from "./icons";
-import { useDebouncedCallback } from 'use-debounce';
 
 interface SearchFormProps {
   query: string;
@@ -26,7 +26,7 @@ export function SearchForm({
   const [isFocused, setIsFocused] = useState(false);
   const { paste, isSupported: clipboardSupported } = useClipboard();
 
-  const debouncedSearch = useDebouncedCallback((q: string) => {
+  const debouncedSearch = useDebounceCallback((q: string) => {
     if (q.length >= 3) {
       onSearch(q);
     }
@@ -85,18 +85,6 @@ export function SearchForm({
     },
     { enableOnFormTags: true }
   );
-
-  useEffect(() => {
-    const handleResize = () => {
-      if (isFocused && window.visualViewport) {
-        const viewportHeight = window.visualViewport.height;
-        document.documentElement.style.setProperty("--viewport-height", `${viewportHeight}px`);
-      }
-    };
-
-    window.visualViewport?.addEventListener("resize", handleResize);
-    return () => window.visualViewport?.removeEventListener("resize", handleResize);
-  }, [isFocused]);
 
   return (
     <form

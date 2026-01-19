@@ -1,9 +1,11 @@
-import { Virtuoso } from "react-virtuoso";
+import { lazy, Suspense } from "react";
 import { css } from "../../styled-system/css";
 import { RepoItem } from "./RepoItem";
 import { RepoSkeleton } from "./Skeleton";
 import { config } from "../lib/config";
 import type { GitHubRepository } from "../types/github.generated";
+
+const VirtualizedRepoList = lazy(() => import("./VirtualizedRepoList"));
 
 interface RepoListProps {
   repos: GitHubRepository[];
@@ -62,41 +64,13 @@ export function RepoList({
   }
 
   return (
-    <div className={css({ pl: "4" })} role="list" aria-label="Repositories">
-      <Virtuoso
-        style={{ height: config.ui.repoListMaxHeight }}
-        data={repos}
-        endReached={() => {
-          if (hasMore && !isLoadingMore && onLoadMore) {
-            onLoadMore();
-          }
-        }}
-        overscan={200}
-        itemContent={(_index, repo) => (
-          <div
-            role="listitem"
-            className={css({
-              pb: "2",
-            })}
-          >
-            <RepoItem repo={repo} />
-          </div>
-        )}
-        components={{
-          Footer: () =>
-            isLoadingMore ? (
-              <div
-                className={css({
-                  textAlign: "center",
-                  py: "3",
-                  color: "text.muted",
-                })}
-              >
-                Loading more...
-              </div>
-            ) : null,
-        }}
+    <Suspense fallback={<RepoSkeleton count={5} />}>
+      <VirtualizedRepoList
+        repos={repos}
+        isLoadingMore={isLoadingMore}
+        hasMore={hasMore}
+        onLoadMore={onLoadMore}
       />
-    </div>
+    </Suspense>
   );
 }

@@ -1,97 +1,61 @@
-import { useState, useCallback, useEffect, startTransition, lazy, Suspense } from "react";
+import { useState, useCallback, lazy, Suspense, useEffect } from "react";
 import { css } from "../styled-system/css";
+import { Header } from "./components/Header";
+import { Footer } from "./components/Footer";
 import { SearchForm } from "./components/SearchForm";
 import { SearchHistory } from "./components/SearchHistory";
-import { ThemeToggle } from "./components/ThemeToggle";
-import { KeyboardHints } from "./components/KeyboardHints";
 import { ErrorBoundary } from "./components/ErrorBoundary";
 import { Skeleton } from "./components/Skeleton";
 import { useSearchHistory } from "./hooks/useSearchHistory";
 import { useKeyboardNav } from "./hooks/useKeyboardNav";
-import { searchUsers } from "./api/github";
-import type { GitHubUser } from "./types/github.generated";
+import { useDocumentTitle } from "usehooks-ts";
+import { useGitHubSearch } from "./hooks/useGitHubSearch";
 
-const UserAccordion = lazy(() =>
-  import("./components/UserAccordion").then((m) => ({ default: m.UserAccordion }))
-);
-const WebVitals = lazy(() =>
-  import("./components/WebVitals").then((m) => ({ default: m.WebVitals }))
-);
+const UserAccordion = lazy(() => import("./components/UserAccordion"));
+
+const MIN_QUERY_LENGTH = 3;
+const DEFAULT_TITLE = "GitHub User Search - Explore Users & Repositories";
 
 function App() {
   const [query, setQuery] = useState("");
-  const [users, setUsers] = useState<GitHubUser[]>([]);
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [hasSearched, setHasSearched] = useState(false);
-  const [isOffline, setIsOffline] = useState(!navigator.onLine);
+  const [inputError, setInputError] = useState<string | null>(null);
 
   const { history, addToHistory, clearHistory } = useSearchHistory();
-  const { selectedIndex, setSelectedIndex, expandedIndex, setExpandedIndex } = useKeyboardNav(
-    users.length
-  );
+  const { users, isLoading, isIdle, fetchError, reset } = useGitHubSearch(query);
+  const { selectedIndex, setSelectedIndex, expandedIndex, setExpandedIndex } = useKeyboardNav(users.length);
+
+  useEffect(() => {
+    if (!isLoading && users.length > 0) {
+      setSelectedIndex(0);
+      setExpandedIndex(null);
+    }
+  }, [isLoading, users.length, setSelectedIndex, setExpandedIndex]);
+
+  const hasSearched = !isIdle;
+  useDocumentTitle(hasSearched && query ? `"${query}" - GitHub User Search` : DEFAULT_TITLE);
 
   const handleSearch = useCallback(
-    async (searchQuery: string) => {
-      if (searchQuery.length < 3) {
-        setError("Please enter at least 3 characters");
+    (inputQuery: string) => {
+      if (inputQuery.length < MIN_QUERY_LENGTH) {
+        setInputError(`Please enter at least ${MIN_QUERY_LENGTH} characters`);
         return;
       }
-
-      setIsLoading(true);
-      setError(null);
-      setHasSearched(true);
-
-      try {
-        const result = await searchUsers(searchQuery, 5);
-        startTransition(() => {
-          setUsers(result.items);
-          setSelectedIndex(0);
-          setExpandedIndex(null);
-        });
-        addToHistory(searchQuery);
-      } catch (err) {
-        if (err instanceof Error && err.message === "Search cancelled") return;
-        setError(err instanceof Error ? err.message : "Failed to search users");
-        setUsers([]);
-      } finally {
-        setIsLoading(false);
-      }
+      setInputError(null);
+      addToHistory(inputQuery);
     },
-    [addToHistory, setSelectedIndex, setExpandedIndex]
+    [addToHistory]
   );
 
   const handleClear = useCallback(() => {
     setQuery("");
-    setUsers([]);
-    setError(null);
-    setHasSearched(false);
+    setInputError(null);
+    reset();
     setSelectedIndex(0);
     setExpandedIndex(null);
-  }, [setSelectedIndex, setExpandedIndex]);
+  }, [reset, setSelectedIndex, setExpandedIndex]);
 
-  useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
-    const handleOffline = () => setIsOffline(true);
-
-    window.addEventListener("online", handleOnline);
-    window.addEventListener("offline", handleOffline);
-
-    return () => {
-      window.removeEventListener("online", handleOnline);
-      window.removeEventListener("offline", handleOffline);
-    };
-  }, []);
-
-  useEffect(() => {
-    if (hasSearched && query) {
-      document.title = `"${query}" - GitHub User Search`;
-    } else {
-      document.title = "GitHub User Search - Explore Users & Repositories";
-    }
-  }, [query, hasSearched]);
-
-  const showCentered = !hasSearched && users.length === 0;
+  const displayError = inputError || fetchError;
+  const showCentered = isIdle && users.length === 0;
 
   return (
     <div
@@ -104,44 +68,7 @@ function App() {
         transition: "background-color 0.2s, color 0.2s",
       })}
     >
-      <header
-        className={css({
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          p: "4",
-          borderBottom: "1px solid",
-          borderColor: "border.default",
-        })}
-      >
-        <h1
-          className={css({
-            fontSize: "xl",
-            fontWeight: "bold",
-          })}
-        >
-          GitHub User Search
-        </h1>
-        <div className={css({ display: "flex", gap: "2", alignItems: "center" })}>
-          {isOffline && (
-            <span
-              className={css({
-                px: "2",
-                py: "1",
-                bg: "yellow.500",
-                color: "black",
-                borderRadius: "md",
-                fontSize: "sm",
-              })}
-              role="status"
-              aria-live="polite"
-            >
-              Offline
-            </span>
-          )}
-          <ThemeToggle />
-        </div>
-      </header>
+      <Header />
 
       <main
         className={css({
@@ -170,7 +97,7 @@ function App() {
               onSearch={handleSearch}
               onClear={handleClear}
               isLoading={isLoading}
-              error={error}
+              error={displayError}
             />
 
             <SearchHistory
@@ -182,7 +109,6 @@ function App() {
               }}
               onClear={clearHistory}
             />
-
           </ErrorBoundary>
 
           {isLoading && (
@@ -214,7 +140,7 @@ function App() {
             </ErrorBoundary>
           )}
 
-          {!isLoading && hasSearched && users.length === 0 && !error && (
+          {!isLoading && hasSearched && users.length === 0 && !fetchError && (
             <p className={css({ textAlign: "center", color: "text.muted", py: "8" })} role="status">
               No users found for "{query}"
             </p>
@@ -222,23 +148,7 @@ function App() {
         </div>
       </main>
 
-      <footer
-        className={css({
-          borderTop: "1px solid",
-          borderColor: "border.default",
-          p: "4",
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "2",
-        })}
-      >
-        <KeyboardHints />
-        <Suspense fallback={null}>
-          <WebVitals />
-        </Suspense>
-      </footer>
+      <Footer />
     </div>
   );
 }
