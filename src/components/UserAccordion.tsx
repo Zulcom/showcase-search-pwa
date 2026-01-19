@@ -1,4 +1,4 @@
-import { useCallback, useState, memo } from "react";
+import { useCallback, useState, useEffect, useRef, memo } from "react";
 import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { css } from "../../styled-system/css";
 import { RepoList } from "./RepoList";
@@ -205,6 +205,22 @@ export function UserAccordion({
   const [parentRef] = useAutoAnimate();
   const [repoStates, setRepoStates] = useState<Map<string, RepoState>>(new Map());
 
+  const repoStatesRef = useRef(repoStates);
+  repoStatesRef.current = repoStates;
+
+  useEffect(() => {
+    const currentUsernames = new Set(users.map((u) => u.login));
+    setRepoStates((prev) => {
+      const next = new Map<string, RepoState>();
+      for (const [username, state] of prev) {
+        if (currentUsernames.has(username)) {
+          next.set(username, state);
+        }
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [users]);
+
   const loadReposForUser = useCallback(async (username: string) => {
     setRepoStates((prev) => {
       const next = new Map(prev);
@@ -239,7 +255,7 @@ export function UserAccordion({
   }, []);
 
   const loadMoreForUser = useCallback(async (username: string) => {
-    const currentState = repoStates.get(username);
+    const currentState = repoStatesRef.current.get(username);
     if (!currentState || currentState.isLoadingMore || !currentState.hasMore) {
       return;
     }
@@ -285,7 +301,7 @@ export function UserAccordion({
         return next;
       });
     }
-  }, [repoStates]);
+  }, []);
 
   const resetForUser = useCallback((username: string) => {
     setRepoStates((prev) => {
