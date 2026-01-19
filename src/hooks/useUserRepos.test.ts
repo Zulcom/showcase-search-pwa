@@ -33,6 +33,7 @@ const mockUsers: GitHubUser[] = [
 ];
 
 const mockRepos: GitHubRepository[] = [
+  // @ts-ignore
   {
     id: 1,
     node_id: "repo1",
@@ -130,7 +131,11 @@ describe("useUserRepos", () => {
       .map((_, i) => ({ ...mockRepos[0], id: i, name: `repo${i}` }));
     const secondPageRepos = Array(REPOS_PER_PAGE)
       .fill(null)
-      .map((_, i) => ({ ...mockRepos[0], id: i + REPOS_PER_PAGE, name: `repo${i + REPOS_PER_PAGE}` }));
+      .map((_, i) => ({
+        ...mockRepos[0],
+        id: i + REPOS_PER_PAGE,
+        name: `repo${i + REPOS_PER_PAGE}`,
+      }));
 
     vi.mocked(githubApi.getUserRepos)
       .mockResolvedValueOnce(firstPageRepos)
@@ -323,9 +328,7 @@ describe("useUserRepos", () => {
     });
 
     await waitFor(() => {
-      expect(result.current.getRepoState("user1").error).toBe(
-        "Failed to load more repositories"
-      );
+      expect(result.current.getRepoState("user1").error).toBe("Failed to load more repositories");
     });
   });
 });

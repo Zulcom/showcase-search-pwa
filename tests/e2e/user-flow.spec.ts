@@ -128,8 +128,7 @@ test.describe("User flow", () => {
 
     try {
       await page.waitForSelector('[role="list"][aria-label="GitHub users"]', { timeout: 10000 });
-    } catch {
-    }
+    } catch {}
 
     await page.goto("/");
     await page.waitForLoadState("domcontentloaded");

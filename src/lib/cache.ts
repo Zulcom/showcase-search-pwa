@@ -90,8 +90,7 @@ export function setInCache<T>(key: string, data: T, ttl: number = config.cache.t
         const entry: CacheEntry<T> = { data, timestamp: now, ttl, lastAccessed: now };
         localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(entry));
         return;
-      } catch {
-      }
+      } catch {}
     }
     logger.warn("Failed to write to cache", err);
   }
