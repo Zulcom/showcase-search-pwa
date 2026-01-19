@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect, startTransition, lazy, Suspense } fro
 import { css } from "../styled-system/css";
 import { SearchForm } from "./components/SearchForm";
 import { SearchHistory } from "./components/SearchHistory";
-import { ResultsSelector } from "./components/ResultsSelector";
 import { ThemeToggle } from "./components/ThemeToggle";
 import { KeyboardHints } from "./components/KeyboardHints";
 import { ErrorBoundary } from "./components/ErrorBoundary";
@@ -19,14 +18,11 @@ const WebVitals = lazy(() =>
   import("./components/WebVitals").then((m) => ({ default: m.WebVitals }))
 );
 
-type ResultsCount = 5 | 100;
-
 function App() {
   const [query, setQuery] = useState("");
   const [users, setUsers] = useState<GitHubUser[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [resultsCount, setResultsCount] = useState<ResultsCount>(5);
   const [hasSearched, setHasSearched] = useState(false);
   const [isOffline, setIsOffline] = useState(!navigator.onLine);
 
@@ -47,7 +43,7 @@ function App() {
       setHasSearched(true);
 
       try {
-        const result = await searchUsers(searchQuery, resultsCount);
+        const result = await searchUsers(searchQuery, 5);
         startTransition(() => {
           setUsers(result.items);
           setSelectedIndex(0);
@@ -55,13 +51,14 @@ function App() {
         });
         addToHistory(searchQuery);
       } catch (err) {
+        if (err instanceof Error && err.message === "Search cancelled") return;
         setError(err instanceof Error ? err.message : "Failed to search users");
         setUsers([]);
       } finally {
         setIsLoading(false);
       }
     },
-    [resultsCount, addToHistory, setSelectedIndex, setExpandedIndex]
+    [addToHistory, setSelectedIndex, setExpandedIndex]
   );
 
   const handleClear = useCallback(() => {
@@ -186,12 +183,11 @@ function App() {
               onClear={clearHistory}
             />
 
-            <ResultsSelector value={resultsCount} onChange={setResultsCount} />
           </ErrorBoundary>
 
           {isLoading && (
             <div role="status" aria-label="Loading search results">
-              <Skeleton count={resultsCount === 5 ? 5 : 10} />
+              <Skeleton count={5} />
             </div>
           )}
 
@@ -213,7 +209,6 @@ function App() {
                   expandedIndex={expandedIndex}
                   onSelectUser={setSelectedIndex}
                   onExpandUser={setExpandedIndex}
-                  virtualized={resultsCount === 100}
                 />
               </Suspense>
             </ErrorBoundary>

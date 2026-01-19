@@ -10,11 +10,14 @@ import type {
 const BASE_URL = "https://api.github.com";
 const CACHE_TTL = 1000 * 60 * 5;
 
-async function fetchWithAuth<T>(endpoint: string): Promise<T> {
+let currentSearchController: AbortController | null = null;
+
+async function fetchWithAuth<T>(endpoint: string, signal?: AbortSignal): Promise<T> {
   const response = await fetch(`${BASE_URL}${endpoint}`, {
     headers: {
       Accept: "application/vnd.github.v3+json",
     },
+    signal,
   });
 
   if (!response.ok) {
@@ -40,6 +43,12 @@ export async function searchUsers(
   query: string,
   perPage: number = 5
 ): Promise<GitHubUserSearchResponse> {
+  if (currentSearchController) {
+    currentSearchController.abort();
+  }
+  currentSearchController = new AbortController();
+  const { signal } = currentSearchController;
+
   const cacheKey = `users:${query}:${perPage}`;
   const cached = getFromCache<GitHubUserSearchResponse>(cacheKey);
 
@@ -50,14 +59,22 @@ export async function searchUsers(
 
   logger.info("Searching GitHub users", { query, perPage });
 
-  const result = await withRetry(() =>
-    fetchWithAuth<GitHubUserSearchResponse>(
-      `/search/users?q=${encodeURIComponent(query)}&per_page=${perPage}`
-    )
-  );
+  try {
+    const result = await withRetry(() =>
+      fetchWithAuth<GitHubUserSearchResponse>(
+        `/search/users?q=${encodeURIComponent(query)}&per_page=${perPage}`,
+        signal
+      )
+    );
 
-  setInCache(cacheKey, result, CACHE_TTL);
-  return result;
+    setInCache(cacheKey, result, CACHE_TTL);
+    return result;
+  } catch (error) {
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Search cancelled");
+    }
+    throw error;
+  }
 }
 
 export async function getUserRepos(

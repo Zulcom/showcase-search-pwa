@@ -81,8 +81,7 @@ export default defineConfig({
       output: {
         manualChunks: {
           react: ["react", "react-dom"],
-          animations: ["framer-motion", "@formkit/auto-animate"],
-          virtual: ["@tanstack/react-virtual"],
+          animations: ["@formkit/auto-animate"],
         },
       },
     },

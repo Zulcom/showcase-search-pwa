@@ -1,10 +1,10 @@
-import { useCallback, useRef, useEffect } from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useVirtualizer } from "@tanstack/react-virtual";
+import { useCallback, useState, memo } from "react";
+import { useAutoAnimate } from "@formkit/auto-animate/react";
 import { css } from "../../styled-system/css";
 import { RepoList } from "./RepoList";
-import { useInfiniteRepos } from "../hooks/useInfiniteRepos";
-import type { GitHubUser } from "../types/github.generated";
+import { RenderCounter } from "./RenderCounter";
+import { getUserRepos } from "../api/github";
+import type { GitHubUser, GitHubRepository } from "../types/github.generated";
 
 interface UserAccordionProps {
   users: GitHubUser[];
@@ -12,39 +12,55 @@ interface UserAccordionProps {
   expandedIndex: number | null;
   onSelectUser: (index: number) => void;
   onExpandUser: (index: number | null) => void;
-  virtualized?: boolean;
 }
+
+interface RepoState {
+  repos: GitHubRepository[];
+  isLoading: boolean;
+  isLoadingMore: boolean;
+  error: string | null;
+  hasMore: boolean;
+}
+
+const defaultRepoState: RepoState = {
+  repos: [],
+  isLoading: false,
+  isLoadingMore: false,
+  error: null,
+  hasMore: false,
+};
 
 interface UserItemProps {
   user: GitHubUser;
   index: number;
   isSelected: boolean;
   isExpanded: boolean;
+  repoState: RepoState;
   onSelect: () => void;
   onToggle: () => void;
-  virtualized?: boolean;
+  onLoadRepos: () => void;
+  onReset: () => void;
 }
 
-function UserItem({
+const UserItem = memo(function UserItem({
   user,
   isSelected,
   isExpanded,
+  repoState,
   onSelect,
   onToggle,
-  virtualized,
+  onLoadRepos,
+  onReset,
 }: UserItemProps) {
-  const { repos, isLoading, isLoadingMore, error, hasMore, loadRepos, loadMore, reset } =
-    useInfiniteRepos();
-
   const handleToggle = useCallback(() => {
     onSelect();
     if (!isExpanded) {
-      loadRepos(user.login);
+      onLoadRepos();
     } else {
-      reset();
+      onReset();
     }
     onToggle();
-  }, [isExpanded, loadRepos, onSelect, onToggle, reset, user.login]);
+  }, [isExpanded, onLoadRepos, onSelect, onToggle, onReset]);
 
   return (
     <div
@@ -55,8 +71,10 @@ function UserItem({
         borderRadius: "lg",
         overflow: "hidden",
         transition: "border-color 0.2s",
+        position: "relative",
       })}
     >
+      <RenderCounter name={user.login} enabled />
       <button
         type="button"
         onClick={handleToggle}
@@ -135,52 +153,42 @@ function UserItem({
         </span>
       </button>
 
-      <AnimatePresence>
-        {isExpanded && (
-          <motion.div
-            id={`repos-${user.id}`}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className={css({ overflow: "hidden" })}
+      {isExpanded && (
+        <div id={`repos-${user.id}`} className={css({ overflow: "hidden" })}>
+          <div
+            className={css({
+              p: "4",
+              pt: "0",
+              borderTop: "1px solid",
+              borderColor: "border.default",
+            })}
           >
-            <div
-              className={css({
-                p: "4",
-                pt: "0",
-                borderTop: "1px solid",
-                borderColor: "border.default",
-              })}
-            >
-              {error ? (
-                <p
-                  className={css({
-                    color: "red.500",
-                    textAlign: "center",
-                    py: "4",
-                  })}
-                  role="alert"
-                >
-                  {error}
-                </p>
-              ) : (
-                <RepoList
-                  repos={repos}
-                  isLoading={isLoading}
-                  isLoadingMore={isLoadingMore}
-                  hasMore={hasMore}
-                  onLoadMore={loadMore}
-                  virtualized={virtualized}
-                />
-              )}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+            {repoState.error ? (
+              <p
+                className={css({
+                  color: "red.500",
+                  textAlign: "center",
+                  py: "4",
+                })}
+                role="alert"
+              >
+                {repoState.error}
+              </p>
+            ) : (
+              <RepoList
+                repos={repoState.repos}
+                isLoading={repoState.isLoading}
+                isLoadingMore={repoState.isLoadingMore}
+                hasMore={repoState.hasMore}
+                onLoadMore={() => {}}
+              />
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
-}
+});
 
 export function UserAccordion({
   users,
@@ -188,81 +196,53 @@ export function UserAccordion({
   expandedIndex,
   onSelectUser,
   onExpandUser,
-  virtualized = false,
 }: UserAccordionProps) {
-  const parentRef = useRef<HTMLDivElement>(null);
+  const [parentRef] = useAutoAnimate();
+  const [repoStates, setRepoStates] = useState<Map<string, RepoState>>(new Map());
 
-  const virtualizer = useVirtualizer({
-    count: users.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 80,
-    overscan: 3,
-    enabled: virtualized,
-  });
+  const loadReposForUser = useCallback(async (username: string) => {
+    setRepoStates((prev) => {
+      const next = new Map(prev);
+      next.set(username, { ...defaultRepoState, isLoading: true });
+      return next;
+    });
 
-  useEffect(() => {
-    if (virtualized && parentRef.current) {
-      virtualizer.scrollToIndex(selectedIndex, { align: "center" });
+    try {
+      const repos = await getUserRepos(username, 1, 30);
+      setRepoStates((prev) => {
+        const next = new Map(prev);
+        next.set(username, {
+          repos,
+          isLoading: false,
+          isLoadingMore: false,
+          error: null,
+          hasMore: repos.length === 30,
+        });
+        return next;
+      });
+    } catch (err) {
+      setRepoStates((prev) => {
+        const next = new Map(prev);
+        next.set(username, {
+          ...defaultRepoState,
+          error: err instanceof Error ? err.message : "Failed to load repositories",
+        });
+        return next;
+      });
     }
-  }, [selectedIndex, virtualized, virtualizer]);
+  }, []);
 
-  if (virtualized) {
-    return (
-      <div
-        ref={parentRef}
-        className={css({
-          maxHeight: "600px",
-          overflowY: "auto",
-        })}
-        role="list"
-        aria-label="GitHub users"
-      >
-        <div
-          style={{
-            height: `${virtualizer.getTotalSize()}px`,
-            width: "100%",
-            position: "relative",
-          }}
-        >
-          {virtualizer.getVirtualItems().map((virtualRow) => {
-            const user = users[virtualRow.index];
-            return (
-              <div
-                key={virtualRow.key}
-                data-index={virtualRow.index}
-                ref={virtualizer.measureElement}
-                style={{
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  width: "100%",
-                  transform: `translateY(${virtualRow.start}px)`,
-                }}
-                role="listitem"
-              >
-                <div className={css({ pb: "3" })}>
-                  <UserItem
-                    user={user}
-                    index={virtualRow.index}
-                    isSelected={selectedIndex === virtualRow.index}
-                    isExpanded={expandedIndex === virtualRow.index}
-                    onSelect={() => onSelectUser(virtualRow.index)}
-                    onToggle={() =>
-                      onExpandUser(expandedIndex === virtualRow.index ? null : virtualRow.index)
-                    }
-                    virtualized={virtualized}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-    );
-  }
+  const resetForUser = useCallback((username: string) => {
+    setRepoStates((prev) => {
+      const next = new Map(prev);
+      next.delete(username);
+      return next;
+    });
+  }, []);
 
   return (
-    <motion.div
+    <div
+      ref={parentRef}
       className={css({
         display: "flex",
         flexDirection: "column",
@@ -270,28 +250,22 @@ export function UserAccordion({
       })}
       role="list"
       aria-label="GitHub users"
-      layout
     >
       {users.map((user, index) => (
-        <motion.div
-          key={user.id}
-          layout
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: index * 0.05 }}
-          role="listitem"
-        >
+        <div key={user.id} role="listitem">
           <UserItem
             user={user}
             index={index}
             isSelected={selectedIndex === index}
             isExpanded={expandedIndex === index}
+            repoState={repoStates.get(user.login) || defaultRepoState}
             onSelect={() => onSelectUser(index)}
             onToggle={() => onExpandUser(expandedIndex === index ? null : index)}
-            virtualized={false}
+            onLoadRepos={() => loadReposForUser(user.login)}
+            onReset={() => resetForUser(user.login)}
           />
-        </motion.div>
+        </div>
       ))}
-    </motion.div>
+    </div>
   );
 }
