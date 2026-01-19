@@ -15,7 +15,7 @@
     "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:coverage": "playwright test --project=chromium && nyc report --reporter=text --reporter=html",
-    "prepare": "lefthook install && panda codegen && panda cssgen --outfile styled-system/styles.css",
+    "prepare": "lefthook install && panda codegen && panda cssgen --outfile styled-system/styles.css && npm run generate-types",
     "generate-types": "tsx scripts/generate-types.ts"
   },
   "dependencies": {
