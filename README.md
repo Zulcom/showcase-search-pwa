@@ -91,26 +91,28 @@ Here we have:
 
 ## What can be improved
 
-- Github API key should be added - only stored on backend
-- Usernames shorter than 3 characters [exist](https://github.com/ai) - it's discussion of API debounce trade-offs.
-- For large projects state management lib is mandatory
-- Codegen should be done with openapi generator
-- AbortController will concurrently abort other code if this lib reused by other features.
-- Proper design with well-made icons instead of lucide and fonts
-- Web-vitals shouldn't be displayed to real users and shouldn't be collected for each visitor
-- Documentation and clean up some development artifacts
-- Monitoring
+- A GitHub API key is required for good UX but must be stored on the backend only (Architecture limitation).
+- Usernames shorter than 3 characters [exist](https://github.com/ai) (it's discussion of API debounce trade-offs)
+- For large projects state management lib is mandatory (and it's easier to test and extend)
+- `AbortController` will concurrently abort other code if this lib reused by other features.
+- Codegen should be done with openapi generator (Such a great opportunity to show scripting skills)
+- Web-vitals shouldn't be displayed to real users and shouldn't be collected for each visitor (affects performance)
+- A proper visual design with custom icons and typography instead of OSS icon sets (Lucide used).
+- Improve documentation and clean up some development artifacts
+- Monitoring and proper observability should be added
 - Proper E2E tests for CI/CD and coverage merging (debatable)
-- SSR for work without javascript
+- SSR support to allow the application to function without JavaScript (because "use a proper browser" was never a good response)
+
 ## AI Assistance disclosure
 
-Before submitting this project I utilized Claude Code with Opus 4.5 model to validate my submission.
-At first, I run it in Plan mode (extended context space, specific system prompt).
+Before submitting this project, I used Claude Code with the Opus 4.5 model to eliminate obvious issues and avoid an initial round of corrective feedback.
 
-I am saved result of it, pasted pdf received by email (not included in repo) to same directory and run it on commit
-`0e1e5d09baf1cba196bfabd93c926d228ab69749`:
+It was initially run in Plan mode (extended context, custom system prompt) with a first prompt.
+The resulting prompt with original PDF requirements was saved locally and used to review the final commit. File system was as of 0e1e5d09baf1cba196bfabd93c926d228ab69749.
 
-- ./prompts/task.md is a prompt
-- ./prompts/result.txt is full chat export
+- `./prompts/task.md` consists of two prompts
+- `./prompts/result.txt` is full chat export
 
-(result of analysis here: `prompts/result.txt:286`)
+Result of analysis here: `prompts/result.txt:286`
+
+The PDF requirements (received via email and not included in the repository) was sanitized prior to being allowed to read by model: Trademarks were removed, and wording was changed without altering the original meaning.
