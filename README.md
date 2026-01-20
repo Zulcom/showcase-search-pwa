@@ -92,6 +92,7 @@ Here we have:
 ## What can be improved
 
 - Github API key should be added - only stored on backend
+- Usernames shorter than 3 characters [exist](https://github.com/ai) - it's discussion of API debounce trade-offs.
 - For large projects state management lib is mandatory
 - Codegen should be done with openapi generator
 - AbortController will concurrently abort other code if this lib reused by other features.
